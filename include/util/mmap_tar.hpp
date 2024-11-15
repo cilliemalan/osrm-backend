@@ -10,14 +10,12 @@
 #include <tuple>
 #include <unordered_map>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 using DataRange = std::pair<const char *, const char *>;
 using DataMap = std::unordered_map<std::string, DataRange>;
 
-inline DataMap mmapTarFile(const boost::filesystem::path &path,
+inline DataMap mmapTarFile(const std::filesystem::path &path,
                            boost::iostreams::mapped_file_source &region)
 {
     DataMap map;
@@ -38,7 +36,6 @@ inline DataMap mmapTarFile(const boost::filesystem::path &path,
 
     return map;
 }
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

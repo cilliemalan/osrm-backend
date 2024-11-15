@@ -3,60 +3,17 @@
 
 #include <boost/assert.hpp>
 #include <boost/heap/d_ary_heap.hpp>
-#include <boost/optional.hpp>
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <map>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
-namespace osrm
+namespace osrm::util
 {
-namespace util
-{
-
-template <typename NodeID, typename Key> class GenerationArrayStorage
-{
-    using GenerationCounter = std::uint16_t;
-
-  public:
-    explicit GenerationArrayStorage(std::size_t size)
-        : positions(size, 0), generation(1), generations(size, 0)
-    {
-    }
-
-    Key &operator[](NodeID node)
-    {
-        generation[node] = generation;
-        return positions[node];
-    }
-
-    Key peek_index(const NodeID node) const
-    {
-        if (generations[node] < generation)
-        {
-            return std::numeric_limits<Key>::max();
-        }
-        return positions[node];
-    }
-
-    void Clear()
-    {
-        generation++;
-        // if generation overflows we end up at 0 again and need to clear the vector
-        if (generation == 0)
-        {
-            generation = 1;
-            std::fill(generations.begin(), generations.end(), 0);
-        }
-    }
-
-  private:
-    GenerationCounter generation;
-    std::vector<GenerationCounter> generations;
-    std::vector<Key> positions;
-};
 
 template <typename NodeID, typename Key> class ArrayStorage
 {
@@ -71,29 +28,6 @@ template <typename NodeID, typename Key> class ArrayStorage
 
   private:
     std::vector<Key> positions;
-};
-
-template <typename NodeID, typename Key> class MapStorage
-{
-  public:
-    explicit MapStorage(std::size_t) {}
-
-    Key &operator[](NodeID node) { return nodes[node]; }
-
-    void Clear() { nodes.clear(); }
-
-    Key peek_index(const NodeID node) const
-    {
-        const auto iter = nodes.find(node);
-        if (nodes.end() != iter)
-        {
-            return iter->second;
-        }
-        return std::numeric_limits<Key>::max();
-    }
-
-  private:
-    std::map<NodeID, Key> nodes;
 };
 
 template <typename NodeID, typename Key> class UnorderedMapStorage
@@ -194,7 +128,20 @@ template <typename NodeID,
 class QueryHeap
 {
   private:
-    using HeapData = std::pair<Weight, Key>;
+    struct HeapData
+    {
+        Weight weight;
+        Key index;
+
+        bool operator>(const HeapData &other) const
+        {
+            if (weight == other.weight)
+            {
+                return index > other.index;
+            }
+            return weight > other.weight;
+        }
+    };
     using HeapContainer = boost::heap::d_ary_heap<HeapData,
                                                   boost::heap::arity<4>,
                                                   boost::heap::mutable_<true>,
@@ -233,7 +180,7 @@ class QueryHeap
     {
         BOOST_ASSERT(node < std::numeric_limits<NodeID>::max());
         const auto index = static_cast<Key>(inserted_nodes.size());
-        const auto handle = heap.push(std::make_pair(weight, index));
+        const auto handle = heap.emplace(HeapData{weight, index});
         inserted_nodes.emplace_back(HeapNode{handle, node, weight, data});
         node_index[node] = index;
     }
@@ -291,44 +238,44 @@ class QueryHeap
         return inserted_nodes[index].node == node;
     }
 
-    boost::optional<HeapNode &> GetHeapNodeIfWasInserted(const NodeID node)
+    HeapNode *GetHeapNodeIfWasInserted(const NodeID node)
     {
         const auto index = node_index.peek_index(node);
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
             inserted_nodes[index].node != node)
         {
-            return {};
+            return nullptr;
         }
-        return inserted_nodes[index];
+        return &inserted_nodes[index];
     }
 
-    boost::optional<const HeapNode &> GetHeapNodeIfWasInserted(const NodeID node) const
+    const HeapNode *GetHeapNodeIfWasInserted(const NodeID node) const
     {
         const auto index = node_index.peek_index(node);
         if (index >= static_cast<decltype(index)>(inserted_nodes.size()) ||
             inserted_nodes[index].node != node)
         {
-            return {};
+            return nullptr;
         }
-        return inserted_nodes[index];
+        return &inserted_nodes[index];
     }
 
     NodeID Min() const
     {
         BOOST_ASSERT(!heap.empty());
-        return inserted_nodes[heap.top().second].node;
+        return inserted_nodes[heap.top().index].node;
     }
 
     Weight MinKey() const
     {
         BOOST_ASSERT(!heap.empty());
-        return heap.top().first;
+        return heap.top().weight;
     }
 
     NodeID DeleteMin()
     {
         BOOST_ASSERT(!heap.empty());
-        const Key removedIndex = heap.top().second;
+        const Key removedIndex = heap.top().index;
         heap.pop();
         inserted_nodes[removedIndex].handle = heap.s_handle_from_iterator(heap.end());
         return inserted_nodes[removedIndex].node;
@@ -337,7 +284,7 @@ class QueryHeap
     HeapNode &DeleteMinGetHeapNode()
     {
         BOOST_ASSERT(!heap.empty());
-        const Key removedIndex = heap.top().second;
+        const Key removedIndex = heap.top().index;
         heap.pop();
         inserted_nodes[removedIndex].handle = heap.s_handle_from_iterator(heap.end());
         return inserted_nodes[removedIndex];
@@ -346,9 +293,9 @@ class QueryHeap
     void DeleteAll()
     {
         auto const none_handle = heap.s_handle_from_iterator(heap.end());
-        std::for_each(inserted_nodes.begin(), inserted_nodes.end(), [&none_handle](auto &node) {
-            node.handle = none_handle;
-        });
+        std::for_each(inserted_nodes.begin(),
+                      inserted_nodes.end(),
+                      [&none_handle](auto &node) { node.handle = none_handle; });
         heap.clear();
     }
 
@@ -358,13 +305,13 @@ class QueryHeap
         const auto index = node_index.peek_index(node);
         auto &reference = inserted_nodes[index];
         reference.weight = weight;
-        heap.increase(reference.handle, std::make_pair(weight, index));
+        heap.increase(reference.handle, HeapData{weight, static_cast<Key>(index)});
     }
 
     void DecreaseKey(const HeapNode &heapNode)
     {
         BOOST_ASSERT(!WasRemoved(heapNode.node));
-        heap.increase(heapNode.handle, std::make_pair(heapNode.weight, (*heapNode.handle).second));
+        heap.increase(heapNode.handle, HeapData{heapNode.weight, (*heapNode.handle).index});
     }
 
   private:
@@ -372,7 +319,6 @@ class QueryHeap
     HeapContainer heap;
     IndexStorage node_index;
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif // OSRM_UTIL_QUERY_HEAP_HPP

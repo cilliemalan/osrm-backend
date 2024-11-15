@@ -6,14 +6,12 @@
 #include "util/typedefs.hpp"
 
 #include <boost/range/adaptor/filtered.hpp>
-#include <boost/unordered_map.hpp>
 
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 // Allows easy check for whether a node restriction is present at a given intersection
@@ -34,9 +32,8 @@ template <typename RestrictionFilter> class NodeRestrictionMap
     // Find all restrictions applicable to (from,via,to) turns
     auto Restrictions(NodeID from, NodeID via, NodeID to) const
     {
-        const auto turnFilter = [this, to](const auto &restriction) {
-            return index_filter(restriction) && restriction->IsTurnRestricted(to);
-        };
+        const auto turnFilter = [this, to](const auto &restriction)
+        { return index_filter(restriction) && restriction->IsTurnRestricted(to); };
         return getRange(from, via) | boost::adaptors::filtered(turnFilter);
     };
 
@@ -74,7 +71,6 @@ struct UnconditionalOnly
 using RestrictionMap = NodeRestrictionMap<UnconditionalOnly>;
 using ConditionalRestrictionMap = NodeRestrictionMap<ConditionalOnly>;
 
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_NODE_RESTRICTION_MAP_HPP_

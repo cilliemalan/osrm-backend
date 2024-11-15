@@ -8,11 +8,7 @@
 
 #include <boost/format.hpp>
 
-namespace osrm
-{
-namespace server
-{
-namespace service
+namespace osrm::server::service
 {
 
 namespace
@@ -40,7 +36,7 @@ engine::Status NearestService::RunQuery(std::size_t prefix_length,
                                         osrm::engine::api::ResultT &result)
 {
     result = util::json::Object();
-    auto &json_result = result.get<util::json::Object>();
+    auto &json_result = std::get<util::json::Object>(result);
 
     auto query_iterator = query.begin();
     auto parameters =
@@ -72,6 +68,4 @@ engine::Status NearestService::RunQuery(std::size_t prefix_length,
     }
     return BaseService::routing_machine.Nearest(*parameters, result);
 }
-} // namespace service
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server::service

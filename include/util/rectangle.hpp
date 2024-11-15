@@ -3,7 +3,6 @@
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
-
 #include <boost/assert.hpp>
 
 #include <limits>
@@ -11,9 +10,7 @@
 
 #include <cstdint>
 
-namespace osrm
-{
-namespace util
+namespace osrm::util
 {
 
 struct RectangleInt2D
@@ -170,8 +167,19 @@ struct RectangleInt2D
                min_lat != FixedLatitude{std::numeric_limits<std::int32_t>::max()} &&
                max_lat != FixedLatitude{std::numeric_limits<std::int32_t>::min()};
     }
+
+    static RectangleInt2D ExpandMeters(const Coordinate &coordinate, const double meters)
+    {
+        const double lat_offset = meters / coordinate_calculation::METERS_PER_DEGREE_LAT;
+        const double lon_offset =
+            meters / coordinate_calculation::metersPerLngDegree(coordinate.lat);
+
+        return RectangleInt2D{coordinate.lon - toFixed(FloatLongitude{lon_offset}),
+                              coordinate.lon + toFixed(FloatLongitude{lon_offset}),
+                              coordinate.lat - toFixed(FloatLatitude{lat_offset}),
+                              coordinate.lat + toFixed(FloatLatitude{lat_offset})};
+    }
 };
-} // namespace util
-} // namespace osrm
+} // namespace osrm::util
 
 #endif

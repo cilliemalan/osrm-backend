@@ -20,9 +20,7 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 
-namespace osrm
-{
-namespace partitioner
+namespace osrm::partitioner
 {
 namespace detail
 {
@@ -209,7 +207,8 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
         auto lidx = 0UL;
         util::for_each_pair(level_offsets.begin(),
                             level_offsets.begin() + num_level,
-                            [&](const auto offset, const auto next_offset) {
+                            [&](const auto offset, const auto next_offset)
+                            {
                                 // create mask that has `bits` ones at its LSBs.
                                 // 000011
                                 BOOST_ASSERT(offset <= NUM_PARTITION_BITS);
@@ -276,9 +275,8 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
         {
             std::stable_sort(permutation.begin(),
                              permutation.end(),
-                             [&partition](const auto lhs, const auto rhs) {
-                                 return partition[lhs] < partition[rhs];
-                             });
+                             [&partition](const auto lhs, const auto rhs)
+                             { return partition[lhs] < partition[rhs]; });
         }
 
         // top down assign new cell ids
@@ -344,7 +342,6 @@ inline MultiLevelPartitionImpl<storage::Ownership::View>::MultiLevelPartitionImp
 {
 }
 } // namespace detail
-} // namespace partitioner
-} // namespace osrm
+} // namespace osrm::partitioner
 
 #endif

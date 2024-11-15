@@ -15,11 +15,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 namespace TurnLaneType = extractor::TurnLaneType;
 using TurnLaneDescription = extractor::TurnLaneDescription;
@@ -28,9 +24,9 @@ namespace
 {
 std::size_t getNumberOfTurns(const Intersection &intersection)
 {
-    return std::count_if(intersection.begin(), intersection.end(), [](const ConnectedRoad &road) {
-        return road.entry_allowed;
-    });
+    return std::count_if(intersection.begin(),
+                         intersection.end(),
+                         [](const ConnectedRoad &road) { return road.entry_allowed; });
 }
 } // namespace
 
@@ -162,10 +158,10 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
         return TurnLaneScenario::NONE;
 
     // really don't touch roundabouts (#2626)
-    if (intersection.end() !=
-        std::find_if(intersection.begin(), intersection.end(), [](const auto &road) {
-            return hasRoundaboutType(road.instruction);
-        }))
+    if (intersection.end() != std::find_if(intersection.begin(),
+                                           intersection.end(),
+                                           [](const auto &road)
+                                           { return hasRoundaboutType(road.instruction); }))
         return TurnLaneScenario::NONE;
 
     // if only a uturn exists, there is nothing we can do
@@ -237,7 +233,8 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
                 if (via_edge == road.eid)
                     return TurnLaneScenario::SLIPROAD;
 
-                const auto &closest_road = [&]() {
+                const auto &closest_road = [&]()
+                {
                     if (road_index + 1 == previous_intersection.size())
                     {
                         BOOST_ASSERT(road_index > 1);
@@ -423,7 +420,8 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
         return std::count_if(
                    lane_data.begin(),
                    lane_data.end(),
-                   [](const TurnLaneData &data) {
+                   [](const TurnLaneData &data)
+                   {
                        return ((data.tag & TurnLaneType::merge_to_left) != TurnLaneType::empty) ||
                               ((data.tag & TurnLaneType::merge_to_right) != TurnLaneType::empty);
                    }) +
@@ -433,7 +431,8 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
 
     // in case an intersection offers far more lane data items than actual turns, some of them
     // have to be for another intersection. A single additional item can be for an invalid bus lane.
-    const auto num_turns = [&]() {
+    const auto num_turns = [&]()
+    {
         auto count = getNumberOfTurns(intersection);
         if (count < lane_data.size() && !intersection[0].entry_allowed &&
             lane_data.back().tag == TurnLaneType::uturn)
@@ -457,10 +456,10 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
 
     // more turns than lane data
     if (num_turns > lane_data.size() &&
-        lane_data.end() ==
-            std::find_if(lane_data.begin(), lane_data.end(), [](const TurnLaneData &data) {
-                return data.tag == TurnLaneType::none;
-            }))
+        lane_data.end() == std::find_if(lane_data.begin(),
+                                        lane_data.end(),
+                                        [](const TurnLaneData &data)
+                                        { return data.tag == TurnLaneType::none; }))
     {
         return false;
     }
@@ -489,7 +488,8 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
         // u-turn tags are at the outside of the lane-tags and require special handling, since
         // locating their best match requires knowledge on the neighboring tag. (see documentation
         // on findBestMatch/findBestMatchForReverse
-        const auto best_match = [&]() {
+        const auto best_match = [&]()
+        {
             // normal tag or u-turn as only choice (no other tag present)
             if (data.tag != TurnLaneType::uturn || lane_data.size() == 1)
                 return findBestMatch(data.tag, intersection);
@@ -508,7 +508,7 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
         }();
         BOOST_ASSERT(best_match != intersection.end());
         std::size_t match_index = std::distance(intersection.begin(), best_match);
-        all_simple &= (matched_indices.count(match_index) == 0);
+        all_simple &= (!matched_indices.contains(match_index));
         matched_indices.insert(match_index);
         // in case of u-turns, we might need to activate them first
         all_simple &= (best_match->entry_allowed ||
@@ -648,7 +648,8 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
             matched_at_second[none_index] = true;
     }
 
-    const auto augmentEntry = [&](TurnLaneData &data) {
+    const auto augmentEntry = [&](TurnLaneData &data)
+    {
         for (std::size_t lane = 0; lane < turn_lane_data.size(); ++lane)
             if (matched_at_second[lane])
             {
@@ -717,15 +718,15 @@ Intersection TurnLaneHandler::handleSliproadTurn(Intersection intersection,
         std::distance(previous_intersection.begin(),
                       std::find_if(previous_intersection.begin(),
                                    previous_intersection.end(),
-                                   [](const ConnectedRoad &road) {
-                                       return road.instruction.type == TurnType::Sliproad;
-                                   }));
+                                   [](const ConnectedRoad &road)
+                                   { return road.instruction.type == TurnType::Sliproad; }));
 
     BOOST_ASSERT(sliproad_index <= previous_intersection.size());
     const auto &sliproad = previous_intersection[sliproad_index];
 
     // code duplicatino with deduceScenario: TODO refactor
-    const auto &main_road = [&]() {
+    const auto &main_road = [&]()
+    {
         if (sliproad_index + 1 == previous_intersection.size())
         {
             BOOST_ASSERT(sliproad_index > 1);
@@ -813,6 +814,4 @@ Intersection TurnLaneHandler::handleSliproadTurn(Intersection intersection,
     return simpleMatchTuplesToTurns(std::move(intersection), lane_data, combined_id);
 }
 
-} // namespace lanes
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::lanes

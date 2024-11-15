@@ -14,15 +14,13 @@
 #include <boost/assert.hpp>
 #include <unordered_set>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 static constexpr int SECOND_TO_DECISECOND = 10;
 
 void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
-                               const TrafficSignals &traffic_signals,
+                               TrafficSignals &traffic_signals,
                                ScriptingEnvironment &scripting_environment,
                                std::vector<TurnRestriction> &turn_restrictions,
                                std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
@@ -39,7 +37,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
     // restriction path.
     std::unordered_set<NodeID> incompressible_via_nodes;
 
-    const auto remember_via_nodes = [&](const auto &restriction) {
+    const auto remember_via_nodes = [&](const auto &restriction)
+    {
         if (restriction.turn_path.Type() == TurnPathType::VIA_NODE_TURN_PATH)
         {
             incompressible_via_nodes.insert(restriction.turn_path.AsViaNodePath().via);
@@ -84,7 +83,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             }
 
             // check if v is an entry/exit via node for a turn restriction
-            if (incompressible_via_nodes.count(node_v) > 0)
+            if (incompressible_via_nodes.contains(node_v))
             {
                 continue;
             }
@@ -188,16 +187,17 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                  */
                 const auto selectAnnotation =
                     [&node_data_container](const AnnotationID front_annotation,
-                                           const AnnotationID back_annotation) {
-                        // A lane has tags: u - (front) - v - (back) - w
-                        // During contraction, we keep only one of the tags. Usually the one closer
-                        // to the intersection is preferred. If its empty, however, we keep the
-                        // non-empty one
-                        if (node_data_container[back_annotation].lane_description_id ==
-                            INVALID_LANE_DESCRIPTIONID)
-                            return front_annotation;
-                        return back_annotation;
-                    };
+                                           const AnnotationID back_annotation)
+                {
+                    // A lane has tags: u - (front) - v - (back) - w
+                    // During contraction, we keep only one of the tags. Usually the one closer
+                    // to the intersection is preferred. If its empty, however, we keep the
+                    // non-empty one
+                    if (node_data_container[back_annotation].lane_description_id ==
+                        INVALID_LANE_DESCRIPTIONID)
+                        return front_annotation;
+                    return back_annotation;
+                };
 
                 graph.GetEdgeData(forward_e1).annotation_data = selectAnnotation(
                     fwd_edge_data1.annotation_data, fwd_edge_data2.annotation_data);
@@ -253,15 +253,17 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                     scripting_environment.ProcessTurn(extraction_turn);
 
                     auto update_direction_penalty =
-                        [&extraction_turn, weight_multiplier](bool signal,
-                                                              EdgeDuration &duration_penalty,
-                                                              EdgeWeight &weight_penalty) {
-                            if (signal)
-                            {
-                                duration_penalty = extraction_turn.duration * SECOND_TO_DECISECOND;
-                                weight_penalty = extraction_turn.weight * weight_multiplier;
-                            }
-                        };
+                        [&extraction_turn, weight_multiplier](
+                            bool signal, EdgeDuration &duration_penalty, EdgeWeight &weight_penalty)
+                    {
+                        if (signal)
+                        {
+                            duration_penalty = to_alias<EdgeDuration>(extraction_turn.duration *
+                                                                      SECOND_TO_DECISECOND);
+                            weight_penalty =
+                                to_alias<EdgeWeight>(extraction_turn.weight * weight_multiplier);
+                        }
+                    };
 
                     update_direction_penalty(has_forward_signal,
                                              forward_node_duration_penalty,
@@ -276,16 +278,14 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 const auto forward_weight2 = fwd_edge_data2.weight;
                 const auto forward_duration1 = fwd_edge_data1.duration;
                 const auto forward_duration2 = fwd_edge_data2.duration;
-                const auto forward_distance2 = fwd_edge_data2.distance;
 
-                BOOST_ASSERT(0 != forward_weight1);
-                BOOST_ASSERT(0 != forward_weight2);
+                BOOST_ASSERT(EdgeWeight{0} != forward_weight1);
+                BOOST_ASSERT(EdgeWeight{0} != forward_weight2);
 
                 const auto reverse_weight1 = rev_edge_data1.weight;
                 const auto reverse_weight2 = rev_edge_data2.weight;
                 const auto reverse_duration1 = rev_edge_data1.duration;
                 const auto reverse_duration2 = rev_edge_data2.duration;
-                const auto reverse_distance2 = rev_edge_data2.distance;
 
 #ifndef NDEBUG
                 // Because distances are symmetrical, we only need one
@@ -293,42 +293,40 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 // their mirrors.
                 const auto reverse_distance1 = rev_edge_data1.distance;
                 const auto forward_distance1 = fwd_edge_data1.distance;
+                const auto forward_distance2 = fwd_edge_data2.distance;
+                const auto reverse_distance2 = rev_edge_data2.distance;
                 BOOST_ASSERT(forward_distance1 == reverse_distance2);
                 BOOST_ASSERT(forward_distance2 == reverse_distance1);
 #endif
 
-                BOOST_ASSERT(0 != reverse_weight1);
-                BOOST_ASSERT(0 != reverse_weight2);
+                BOOST_ASSERT(EdgeWeight{0} != reverse_weight1);
+                BOOST_ASSERT(EdgeWeight{0} != reverse_weight2);
 
-                auto apply_e2_to_e1 = [&graph](EdgeID edge,
-                                               EdgeWeight weight,
-                                               EdgeDuration duration,
-                                               EdgeDistance distance,
-                                               EdgeDuration &duration_penalty,
-                                               EdgeWeight &weight_penalty) {
-                    auto &edge_data = graph.GetEdgeData(edge);
-                    edge_data.weight += weight;
-                    edge_data.duration += duration;
-                    edge_data.distance += distance;
+                auto apply_e2_to_e1 = [&graph](EdgeID edge1,
+                                               EdgeID edge2,
+                                               EdgeWeight &weight_penalty,
+                                               EdgeDuration &duration_penalty)
+                {
+                    auto &edge1_data = graph.GetEdgeData(edge1);
+                    const auto &edge2_data = graph.GetEdgeData(edge2);
+                    edge1_data.weight += edge2_data.weight;
+                    edge1_data.duration += edge2_data.duration;
+                    edge1_data.distance += edge2_data.distance;
                     if (weight_penalty != INVALID_EDGE_WEIGHT &&
                         duration_penalty != MAXIMAL_EDGE_DURATION)
                     {
-                        edge_data.weight += weight_penalty;
-                        edge_data.duration += duration_penalty;
+                        edge1_data.weight += weight_penalty;
+                        edge1_data.duration += duration_penalty;
                         // Note: no penalties for distances
                     }
                 };
 
                 apply_e2_to_e1(forward_e1,
-                               forward_weight2,
-                               forward_duration2,
-                               forward_distance2,
+                               forward_e2,
                                forward_node_weight_penalty,
                                forward_node_duration_penalty);
                 apply_e2_to_e1(reverse_e1,
-                               reverse_weight2,
-                               reverse_duration2,
-                               reverse_distance2,
+                               reverse_e2,
                                reverse_node_weight_penalty,
                                reverse_node_duration_penalty);
 
@@ -343,16 +341,20 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 // update any involved turn relations
                 turn_path_compressor.Compress(node_u, node_v, node_w);
 
+                // Update traffic signal paths containing compressed node.
+                traffic_signals.Compress(node_u, node_v, node_w);
+
                 // Forward and reversed compressed edge lengths need to match.
                 // Set a dummy empty penalty weight if opposite value exists.
                 auto set_dummy_penalty = [](EdgeWeight &weight_penalty,
                                             EdgeDuration &duration_penalty,
-                                            EdgeWeight &other_weight_penalty) {
+                                            EdgeWeight &other_weight_penalty)
+                {
                     if (weight_penalty == INVALID_EDGE_WEIGHT &&
                         other_weight_penalty != INVALID_EDGE_WEIGHT)
                     {
-                        weight_penalty = 0;
-                        duration_penalty = 0;
+                        weight_penalty = {0};
+                        duration_penalty = {0};
                     }
                 };
                 set_dummy_penalty(forward_node_weight_penalty,
@@ -422,5 +424,4 @@ void GraphCompressor::PrintStatistics(unsigned original_number_of_nodes,
     util::Log() << "Node compression ratio: " << new_node_count / (double)original_number_of_nodes;
     util::Log() << "Edge compression ratio: " << new_edge_count / (double)original_number_of_edges;
 }
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor

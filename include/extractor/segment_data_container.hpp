@@ -8,18 +8,15 @@
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar_fwd.hpp"
 
-#include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/iterator_range.hpp>
 
-#include <unordered_map>
-
+#include <filesystem>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class CompressedEdgeContainer;
@@ -225,7 +222,6 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
 using SegmentDataView = detail::SegmentDataContainerImpl<storage::Ownership::View>;
 using SegmentDataContainer = detail::SegmentDataContainerImpl<storage::Ownership::Container>;
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

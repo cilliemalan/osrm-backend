@@ -12,9 +12,7 @@
 
 #include <memory>
 
-namespace osrm
-{
-namespace server
+namespace osrm::server
 {
 ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(config)
 {
@@ -33,7 +31,7 @@ engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
     if (service_iter == service_map.end())
     {
         result = util::json::Object();
-        auto &json_result = result.get<util::json::Object>();
+        auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "InvalidService";
         json_result.values["message"] = "Service " + parsed_url.service + " not found!";
         return engine::Status::Error;
@@ -43,7 +41,7 @@ engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
     if (service->GetVersion() != parsed_url.version)
     {
         result = util::json::Object();
-        auto &json_result = result.get<util::json::Object>();
+        auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "InvalidVersion";
         json_result.values["message"] = "Service " + parsed_url.service + " not found!";
         return engine::Status::Error;
@@ -51,5 +49,4 @@ engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
 
     return service->RunQuery(parsed_url.prefix_length, parsed_url.query, result);
 }
-} // namespace server
-} // namespace osrm
+} // namespace osrm::server

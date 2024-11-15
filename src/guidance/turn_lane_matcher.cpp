@@ -8,11 +8,7 @@
 
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace guidance
-{
-namespace lanes
+namespace osrm::guidance::lanes
 {
 namespace TurnLaneType = extractor::TurnLaneType;
 
@@ -53,9 +49,8 @@ DirectionModifier::Enum getMatchingModifier(const TurnLaneType::Mask tag)
 // check whether a match of a given tag and a turn instruction can be seen as valid
 bool isValidMatch(const TurnLaneType::Mask tag, const TurnInstruction instruction)
 {
-    const auto isMirroredModifier = [](const TurnInstruction instruction) {
-        return instruction.type == TurnType::Merge;
-    };
+    const auto isMirroredModifier = [](const TurnInstruction instruction)
+    { return instruction.type == TurnType::Merge; };
 
     if (tag == TurnLaneType::uturn)
     {
@@ -118,7 +113,8 @@ typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask tag
 {
     return std::min_element(intersection.begin(),
                             intersection.end(),
-                            [tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
+                            [tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs)
+                            {
                                 // prefer valid matches
                                 if (isValidMatch(tag, lhs.instruction) !=
                                     isValidMatch(tag, rhs.instruction))
@@ -148,7 +144,8 @@ typename Intersection::const_iterator findBestMatchForReverse(const TurnLaneType
     return std::min_element(
         intersection.begin() + std::distance(intersection.begin(), neighbor_itr),
         intersection.end(),
-        [](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
+        [](const ConnectedRoad &lhs, const ConnectedRoad &rhs)
+        {
             const TurnLaneType::Mask tag = TurnLaneType::uturn;
             // prefer valid matches
             if (isValidMatch(tag, lhs.instruction) != isValidMatch(tag, rhs.instruction))
@@ -201,7 +198,8 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
 {
     std::size_t road_index = 1, lane = 0;
 
-    const auto matchRoad = [&](ConnectedRoad &road, const TurnLaneData &data) {
+    const auto matchRoad = [&](ConnectedRoad &road, const TurnLaneData &data)
+    {
         util::guidance::LaneTupleIdPair key{{LaneID(data.to - data.from + 1), data.from},
                                             lane_string_id};
 
@@ -272,6 +270,4 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
     return intersection;
 }
 
-} // namespace lanes
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::lanes

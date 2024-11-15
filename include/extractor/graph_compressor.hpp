@@ -11,9 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 class CompressedEdgeContainer;
@@ -26,7 +24,7 @@ class GraphCompressor
 
   public:
     void Compress(const std::unordered_set<NodeID> &barrier_nodes,
-                  const TrafficSignals &traffic_signals,
+                  TrafficSignals &traffic_signals,
                   ScriptingEnvironment &scripting_environment,
                   std::vector<TurnRestriction> &turn_restrictions,
                   std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
@@ -39,7 +37,6 @@ class GraphCompressor
                          unsigned original_number_of_edges,
                          const util::NodeBasedDynamicGraph &graph) const;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif

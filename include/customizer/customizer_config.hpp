@@ -1,17 +1,14 @@
 #ifndef OSRM_CUSTOMIZE_CUSTOMIZER_CONFIG_HPP
 #define OSRM_CUSTOMIZE_CUSTOMIZER_CONFIG_HPP
 
-#include <boost/filesystem/path.hpp>
-
 #include <array>
+#include <filesystem>
 #include <string>
 
 #include "storage/io_config.hpp"
 #include "updater/updater_config.hpp"
 
-namespace osrm
-{
-namespace customizer
+namespace osrm::customizer
 {
 
 struct CustomizationConfig final : storage::IOConfig
@@ -29,7 +26,7 @@ struct CustomizationConfig final : storage::IOConfig
     {
     }
 
-    void UseDefaultOutputNames(const boost::filesystem::path &base)
+    void UseDefaultOutputNames(const std::filesystem::path &base)
     {
         IOConfig::UseDefaultOutputNames(base);
         updater_config.UseDefaultOutputNames(base);
@@ -39,7 +36,6 @@ struct CustomizationConfig final : storage::IOConfig
 
     updater::UpdaterConfig updater_config;
 };
-} // namespace customizer
-} // namespace osrm
+} // namespace osrm::customizer
 
 #endif // OSRM_CUSTOMIZE_CUSTOMIZER_CONFIG_HPP

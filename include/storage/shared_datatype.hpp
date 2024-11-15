@@ -15,9 +15,7 @@
 #include <numeric>
 #include <unordered_set>
 
-namespace osrm
-{
-namespace storage
+namespace osrm::storage
 {
 
 class BaseDataLayout;
@@ -225,9 +223,12 @@ struct SharedRegionRegister
     // Returns the key of the region with the given name
     RegionID Find(const std::string &name) const
     {
-        auto iter = std::find_if(regions.begin(), regions.end(), [&](const auto &region) {
-            return std::strncmp(region.name, name.c_str(), SharedRegion::MAX_NAME_LENGTH) == 0;
-        });
+        auto iter = std::find_if(
+            regions.begin(),
+            regions.end(),
+            [&](const auto &region) {
+                return std::strncmp(region.name, name.c_str(), SharedRegion::MAX_NAME_LENGTH) == 0;
+            });
 
         if (iter == regions.end())
         {
@@ -298,7 +299,6 @@ struct SharedRegionRegister
     std::array<SharedRegion, MAX_SHARED_REGIONS> regions;
     std::array<bool, MAX_SHM_KEYS> shm_key_in_use;
 };
-} // namespace storage
-} // namespace osrm
+} // namespace osrm::storage
 
 #endif /* SHARED_DATA_TYPE_HPP */

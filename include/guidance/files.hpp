@@ -10,16 +10,16 @@
 
 #include <boost/assert.hpp>
 
-namespace osrm
-{
-namespace guidance
-{
-namespace files
+#include <cstdint>
+#include <filesystem>
+#include <type_traits>
+
+namespace osrm::guidance::files
 {
 
 // reads .osrm.edges
 template <typename TurnDataT>
-inline void readTurnData(const boost::filesystem::path &path,
+inline void readTurnData(const std::filesystem::path &path,
                          TurnDataT &turn_data,
                          std::uint32_t &connectivity_checksum)
 {
@@ -36,7 +36,7 @@ inline void readTurnData(const boost::filesystem::path &path,
 
 // writes .osrm.edges
 template <typename TurnDataT>
-inline void writeTurnData(const boost::filesystem::path &path,
+inline void writeTurnData(const std::filesystem::path &path,
                           const TurnDataT &turn_data,
                           const std::uint32_t connectivity_checksum)
 {
@@ -51,8 +51,6 @@ inline void writeTurnData(const boost::filesystem::path &path,
     writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
     serialization::write(writer, "/common/turn_data", turn_data);
 }
-} // namespace files
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance::files
 
 #endif

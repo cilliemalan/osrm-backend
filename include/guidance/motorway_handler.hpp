@@ -7,14 +7,11 @@
 #include "guidance/intersection_handler.hpp"
 #include "guidance/is_through_street.hpp"
 
-#include "util/attributes.hpp"
 #include "util/node_based_graph.hpp"
 
 #include <vector>
 
-namespace osrm
-{
-namespace guidance
+namespace osrm::guidance
 {
 
 // Intersection handlers deal with all issues related to intersections.
@@ -44,21 +41,16 @@ class MotorwayHandler final : public IntersectionHandler
                             Intersection intersection) const override final;
 
   private:
-    OSRM_ATTR_WARN_UNUSED
-    Intersection handleSliproads(const NodeID intersection_node_id,
-                                 Intersection intersection) const;
+    [[nodiscard]] Intersection handleSliproads(const NodeID intersection_node_id,
+                                               Intersection intersection) const;
 
-    OSRM_ATTR_WARN_UNUSED
-    Intersection fromMotorway(const EdgeID via_edge, Intersection intersection) const;
+    [[nodiscard]] Intersection fromMotorway(const EdgeID via_edge, Intersection intersection) const;
 
-    OSRM_ATTR_WARN_UNUSED
-    Intersection fromRamp(const EdgeID via_edge, Intersection intersection) const;
+    [[nodiscard]] Intersection fromRamp(const EdgeID via_edge, Intersection intersection) const;
 
-    OSRM_ATTR_WARN_UNUSED
-    Intersection fallback(Intersection intersection) const;
+    [[nodiscard]] Intersection fallback(Intersection intersection) const;
 };
 
-} // namespace guidance
-} // namespace osrm
+} // namespace osrm::guidance
 
 #endif /*OSRM_GUIDANCE_MOTORWAY_HANDLER_HPP_*/

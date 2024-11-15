@@ -12,7 +12,7 @@
 #include "util/typedefs.hpp"
 
 #include <iomanip>
-#include <iostream>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -29,9 +29,7 @@ inline std::ostream &operator<<(std::ostream &out, const Coordinate &coordinate)
 }
 } // namespace util
 
-namespace engine
-{
-namespace guidance
+namespace engine::guidance
 {
 inline std::ostream &operator<<(std::ostream &out, const RouteStep &step)
 {
@@ -62,8 +60,7 @@ inline std::ostream &operator<<(std::ostream &out, const RouteStep &step)
 
     return out;
 }
-} // namespace guidance
-} // namespace engine
+} // namespace engine::guidance
 
 namespace guidance
 {

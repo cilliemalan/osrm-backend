@@ -1,7 +1,6 @@
 #include "contractor/contractor.hpp"
 #include "contractor/contract_excludable_graph.hpp"
 #include "contractor/contracted_edge_container.hpp"
-#include "contractor/crc32_processor.hpp"
 #include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
@@ -37,9 +36,7 @@
 #include <boost/assert.hpp>
 #include <tbb/global_control.h>
 
-namespace osrm
-{
-namespace contractor
+namespace osrm::contractor
 {
 
 int Contractor::Run()
@@ -78,7 +75,8 @@ int Contractor::Run()
     // Convert node weights for oneway streets to INVALID_EDGE_WEIGHT
     for (auto &weight : node_weights)
     {
-        weight = (weight & 0x80000000) ? INVALID_EDGE_WEIGHT : weight;
+        weight = (from_alias<EdgeWeight::value_type>(weight) & 0x80000000) ? INVALID_EDGE_WEIGHT
+                                                                           : weight;
     }
 
     // Contracting the edge-expanded graph
@@ -124,5 +122,4 @@ int Contractor::Run()
     return 0;
 }
 
-} // namespace contractor
-} // namespace osrm
+} // namespace osrm::contractor

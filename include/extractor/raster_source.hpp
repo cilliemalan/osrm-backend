@@ -7,21 +7,18 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assert.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/foreach.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_int.hpp>
 
 #include <storage/io.hpp>
 
+#include <filesystem>
 #include <iterator>
 #include <string>
 #include <unordered_map>
 
-namespace osrm
-{
-namespace extractor
+namespace osrm::extractor
 {
 
 /**
@@ -42,7 +39,7 @@ struct RasterDatum
 class RasterGrid
 {
   public:
-    RasterGrid(const boost::filesystem::path &filepath, std::size_t _xdim, std::size_t _ydim)
+    RasterGrid(const std::filesystem::path &filepath, std::size_t _xdim, std::size_t _ydim)
     {
         xdim = _xdim;
         ydim = _ydim;
@@ -173,7 +170,6 @@ class RasterCache
     // the instance
     static RasterCache *g_instance;
 };
-} // namespace extractor
-} // namespace osrm
+} // namespace osrm::extractor
 
 #endif /* RASTER_SOURCE_HPP */
