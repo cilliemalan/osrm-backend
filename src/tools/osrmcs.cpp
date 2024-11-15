@@ -58,7 +58,7 @@ EXPORT const osrm::OSRM *osrmcs_create_instance(const char *database)
         osrm::EngineConfig config;
         config.storage_config = {database};
         config.use_shared_memory = false;
-        config.use_mmap = false;
+        //config.use_mmap = false;
         config.algorithm = osrm::EngineConfig::Algorithm::MLD;
 
         const auto instance = new osrm::OSRM{config};
