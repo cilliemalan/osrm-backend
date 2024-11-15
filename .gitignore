@@ -105,3 +105,8 @@ debug.lua
 
 # node-osrm artifacts
 lib/binding
+
+
+out/
+.cxx/
+.gradle/
