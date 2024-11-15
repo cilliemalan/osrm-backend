@@ -27,6 +27,10 @@
 
 #include "microtar.h"
 
+#if defined(_MSC_VER)
+#define fseek(stream, offset, origin) _fseeki64(stream, (long long)offset, origin)
+#endif
+
 typedef struct {
   char name[100];
   char mode[8];
