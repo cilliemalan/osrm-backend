@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <vector>
 
-
 struct Coordinate
 {
     double latitude;
@@ -65,7 +64,7 @@ EXPORT const osrm::OSRM *osrmcs_create_instance(const char *database)
         const auto instance = new osrm::OSRM{config};
         return instance;
     }
-    catch (std::exception& ex)
+    catch (std::exception &ex)
     {
         return nullptr;
     }
@@ -95,11 +94,11 @@ osrmcs_route(const osrm::OSRM *instance, Coordinate *coordinates, uint32_t num_c
         }
         osrm::engine::api::ResultT result = osrm::json::Object();
         const auto status = instance->Route(params, result);
-        auto &json_result = result.get<osrm::json::Object>();
+        auto &json_result = std::get<osrm::json::Object>(result);
 
         if (status == osrm::Status::Error)
         {
-            const auto message = json_result.values["message"].get<osrm::json::String>().value;
+            const auto message = std::get<osrm::json::String>(json_result.values["message"]).value;
             if (message.size())
             {
                 response->message = _strdup(message.c_str());
@@ -152,11 +151,11 @@ EXPORT const Route *osrmcs_optimize(const osrm::OSRM *instance,
         }
         osrm::engine::api::ResultT result = osrm::json::Object();
         const auto status = instance->Trip(params, result);
-        auto &json_result = result.get<osrm::json::Object>();
+        auto &json_result = std::get<osrm::json::Object>(result);
 
         if (status == osrm::Status::Error)
         {
-            const auto message = json_result.values["message"].get<osrm::json::String>().value;
+            const auto message = std::get<osrm::json::String>(json_result.values["message"]).value;
             if (message.size())
             {
                 response->message = _strdup(message.c_str());
@@ -203,36 +202,36 @@ EXPORT void osrmcs_delete_route(const Route *route)
 static void populate_response(osrm::util::json::Object &json_result, Route *response)
 {
     // check that there actually is a route
-    auto &routes = json_result.values["routes"].get<osrm::json::Array>();
+    auto &routes = std::get<osrm::json::Array>(json_result.values["routes"]);
     if (routes.values.size() == 0)
     {
         response->message = _strdup("No route found");
         return;
     }
-    auto &route = routes.values.at(0).get<osrm::json::Object>();
+    auto &route = std::get<osrm::json::Object>(routes.values.at(0));
 
     // record all waypoints
     std::vector<Coordinate> wpts;
-    auto &waypoints = json_result.values["waypoints"].get<osrm::json::Array>();
+    auto &waypoints = std::get<osrm::json::Array>(json_result.values["waypoints"]);
     for (auto &pwaypoint : waypoints.values)
     {
-        auto &waypoint = pwaypoint.get<osrm::json::Object>();
-        auto &location = waypoint.values["location"].get<osrm::json::Array>();
-        auto lon = location.values.at(0).get<osrm::json::Number>().value;
-        auto lat = location.values.at(1).get<osrm::json::Number>().value;
+        auto &waypoint = std::get<osrm::json::Object>(pwaypoint);
+        auto &location = std::get<osrm::json::Array>(waypoint.values["location"]);
+        auto lon = std::get<osrm::json::Number>(location.values.at(0)).value;
+        auto lat = std::get<osrm::json::Number>(location.values.at(1)).value;
         wpts.push_back({lat, lon});
     }
 
     // convert geometry
     std::vector<Coordinate> gmtry;
     std::vector<size_t> wpt_indices;
-    auto &geometry = route.values["geometry"].get<osrm::json::Object>();
-    auto &coordinates = geometry.values["coordinates"].get<osrm::json::Array>();
+    auto &geometry = std::get<osrm::json::Object>(route.values["geometry"]);
+    auto &coordinates = std::get<osrm::json::Array>(geometry.values["coordinates"]);
     for (auto &pcoord : coordinates.values)
     {
-        auto &coord = pcoord.get<osrm::json::Array>();
-        auto lon = coord.values.at(0).get<osrm::json::Number>().value;
-        auto lat = coord.values.at(1).get<osrm::json::Number>().value;
+        auto &coord = std::get<osrm::json::Array>(pcoord);
+        auto lon = std::get<osrm::json::Number>(coord.values.at(0)).value;
+        auto lat = std::get<osrm::json::Number>(coord.values.at(1)).value;
         Coordinate crd{lat, lon};
         if (crd.latitude == wpts[wpt_indices.size()].latitude &&
             crd.longitude == wpts[wpt_indices.size()].longitude)
@@ -243,18 +242,18 @@ static void populate_response(osrm::util::json::Object &json_result, Route *resp
     }
 
     // record legs
-    response->distance = route.values["distance"].get<osrm::json::Number>().value;
-    response->duration = route.values["duration"].get<osrm::json::Number>().value;
-    auto &legs = route.values["legs"].get<osrm::json::Array>();
+    response->distance = std::get<osrm::json::Number>(route.values["distance"]).value;
+    response->duration = std::get<osrm::json::Number>(route.values["duration"]).value;
+    auto &legs = get<osrm::json::Array>(route.values["legs"]);
     size_t nlegs = response->n_legs;
     response->n_legs = (uint32_t)nlegs;
     response->legs = new RouteLeg[nlegs];
     memset(response->legs, 0, sizeof(*response->legs) * nlegs);
     for (size_t i = 0; i < nlegs; i++)
     {
-        auto &leg = legs.values.at(i).get<osrm::json::Object>();
-        response->legs[i].distance = leg.values["distance"].get<osrm::json::Number>().value;
-        response->legs[i].duration = leg.values["duration"].get<osrm::json::Number>().value;
+        auto &leg = std::get<osrm::json::Object>(legs.values.at(i));
+        response->legs[i].distance = std::get<osrm::json::Number>(leg.values["distance"]).value;
+        response->legs[i].duration = std::get<osrm::json::Number>(leg.values["duration"]).value;
 
         if (i + 1 < wpt_indices.size())
         {
