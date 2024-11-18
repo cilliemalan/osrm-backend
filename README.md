@@ -1,4 +1,28 @@
-## Open Source Routing Machine
+# Open Source Routing Machine
+
+
+## Eureka Notes
+This repository contains the changes made to OSRM to make it compatible with our requirements. This
+consists primarilyof two things:
+- [x] Getting OSRM to build on Windows
+- [x] Creating a DLL that contains the OSRM functionality we need which can then be consumed
+      via P/Invoke from C#.
+- [ ] TSP-TW
+- [ ] CI Build
+
+### Building
+This project is not easy to get to build. The only way I could get it working is the Conan route (see below).
+Besides that pretty solid CMake knowledge is required to deal with all the weird issues that crop up...good luck.
+Maybe one day we can get a CI build going then we don't need to worry about the environment so much anymore.
+
+### Branches
+I got the projecting building and working on Windows both on the 5.27.1 tag and the master branch. The former
+has confusingly been made the `main` branch and the original master branch has been named `latest`. 
+There may or may not be compatibility issues with the data files between the versions, which is why I chose
+5.27.1 to be the master (and therefore default) branch even though `latest` contains quite a lot of new code
+which does (as far as I can tell) work without problems.
+
+## OSRM
 
 
 [![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) [![Codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) [![Discord](https://img.shields.io/discord/1034487840219860992)](https://discord.gg/es9CdcCXcb)
