@@ -1,6 +1,5 @@
 # Open Source Routing Machine
 
-
 ## Eureka Notes
 This repository contains the changes made to OSRM to make it compatible with our requirements. This
 consists primarilyof two things:
@@ -11,9 +10,20 @@ consists primarilyof two things:
 - [ ] CI Build
 
 ### Building
-This project is not easy to get to build. The only way I could get it working is the Conan route (see below).
-Besides that pretty solid CMake knowledge is required to deal with all the weird issues that crop up...good luck.
-Maybe one day we can get a CI build going then we don't need to worry about the environment so much anymore.
+This project is not easy to get to build.
+I got it working with VCPKG. [Install vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-vs?pivots=shell-powershell)
+and then configuring and building should work ok. Please note you have to set VCPKG_ROOT yourself or replace it with the path to your
+vcpkg installation.
+
+To build using CMake (uses ninja):
+```shell
+mkdir build
+cd build
+cmake -G Ninja "-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" ..
+cmake --build .
+```
+
+It takes quite a long time to build.
 
 ### Branches
 I got the projecting building and working on Windows both on the 5.27.1 tag and the master branch. The former
