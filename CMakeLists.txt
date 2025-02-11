@@ -754,3 +754,32 @@ endforeach()
 add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
 set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
 
+
+
+# vroom stuff
+set(VROOM_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/third_party/vroom)
+file(GLOB VroomGlob
+  #${VROOM_ROOT}/src/*.cpp  <-- not this one
+  ${VROOM_ROOT}/src/algorithms/*.cpp
+  ${VROOM_ROOT}/src/algorithms/*/*.cpp
+  #${VROOM_ROOT}/src/routing/*.cpp <-- not this one
+  ${VROOM_ROOT}/src/problems/*.cpp
+  ${VROOM_ROOT}/src/problems/*/*.cpp
+  ${VROOM_ROOT}/src/problems/*/*/*.cpp
+  ${VROOM_ROOT}/src/structures/generic/*.cpp
+  ${VROOM_ROOT}/src/structures/vroom/*.cpp
+  ${VROOM_ROOT}/src/structures/vroom/input/*.cpp
+  ${VROOM_ROOT}/src/structures/vroom/solution/*.cpp
+  ${VROOM_ROOT}/src/structures/*.cpp
+  ${VROOM_ROOT}/src/utils/*.cpp)
+
+#find_package(glpk)
+#if(not ${GLPK_FOUND})
+  list(REMOVE_ITEM VroomGlob ${VROOM_ROOT}/src/algorithms/validation/check.cpp)
+  list(REMOVE_ITEM VroomGlob ${VROOM_ROOT}/src/algorithms/validation/choose_ETA.cpp)
+#endif()
+
+add_library(vroom STATIC ${VroomGlob})
+set_property(TARGET vroom PROPERTY CXX_STANDARD 20)
+target_include_directories(vroom PUBLIC ${VROOM_ROOT}/src)
+target_link_libraries(osrm-cs vroom)
