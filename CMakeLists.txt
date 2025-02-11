@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.18)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(BUILD_SHARED_LIBS OFF)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
@@ -762,7 +763,8 @@ file(GLOB VroomGlob
   #${VROOM_ROOT}/src/*.cpp  <-- not this one
   ${VROOM_ROOT}/src/algorithms/*.cpp
   ${VROOM_ROOT}/src/algorithms/*/*.cpp
-  #${VROOM_ROOT}/src/routing/*.cpp <-- not this one
+  #${VROOM_ROOT}/src/routing/*.cpp <-- not so fast!
+  ${VROOM_ROOT}/src/routing/libosrm_wrapper.cpp
   ${VROOM_ROOT}/src/problems/*.cpp
   ${VROOM_ROOT}/src/problems/*/*.cpp
   ${VROOM_ROOT}/src/problems/*/*/*.cpp
@@ -782,4 +784,5 @@ file(GLOB VroomGlob
 add_library(vroom STATIC ${VroomGlob})
 set_property(TARGET vroom PROPERTY CXX_STANDARD 20)
 target_include_directories(vroom PUBLIC ${VROOM_ROOT}/src)
+target_compile_definitions(vroom PRIVATE USE_LIBOSRM)
 target_link_libraries(osrm-cs vroom)
