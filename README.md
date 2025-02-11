@@ -15,6 +15,12 @@ I got it working with VCPKG. [Install vcpkg](https://learn.microsoft.com/en-us/v
 and then configuring and building should work ok. Please note you have to set VCPKG_ROOT yourself or replace it with the path to your
 vcpkg installation.
 
+Install these things (after installing and configuring vcpkg). This will take a very long time (like an hour). It will also generate 
+about 23GB of binaries (inside your vcpkg directory).
+```shell
+vcpkg install boost-algorithm boost-any boost-array boost-asio boost-assert boost-bind boost-config boost-core boost-crc boost-date-time boost-dynamic-bitset boost-exception boost-filesystem boost-foreach boost-format boost-function boost-functional boost-fusion boost-geometry boost-heap boost-iterator boost-interprocess boost-io boost-iostreams boost-numeric-conversion boost-optional boost-program-options boost-range boost-spirit boost-test boost-tokenizer boost-unordered boost-uuid expat lua bzip2 zlib tbb
+```
+
 To build using CMake (uses ninja):
 ```shell
 mkdir build
