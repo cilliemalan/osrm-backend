@@ -2,46 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct Coordinate
-{
-    double latitude;
-    double longitude;
-};
-
-struct RouteLeg
-{
-    Coordinate start;
-    Coordinate end;
-    double distance;
-    double duration;
-    Coordinate *coordinates;
-    uint32_t num_coordinates;
-};
-
-struct Route
-{
-    double distance;
-    double duration;
-    RouteLeg *legs;
-    uint32_t n_legs;
-    const char *message;
-};
-
-#define IMPORT extern "C" __declspec(dllimport)
-IMPORT const void *osrmcs_create_instance(const char *database);
-IMPORT void osrmcs_delete_instance(const void *instance);
-IMPORT unsigned int osrmcs_ver();
-IMPORT const Route *
-osrmcs_route(const void *instance, Coordinate *coordinates, uint32_t num_coordinates);
-IMPORT const Route *osrmcs_optimize(const void *instance,
-                                    Coordinate *coordinates,
-                                    uint32_t num_coordinates,
-                                    bool round_trip);
-IMPORT void osrmcs_delete_route(const Route *route);
+#include "osrmcs.hpp"
 
 int main(int argc, const char **argv)
 {
-    auto instance = osrmcs_create_instance("C:\\osm\\africa\\africa-latest.osrm");
+    (void)argc;
+    (void)argv;
+    auto instance = osrmcs_create_instance("C:\\osm\\africa-latest.osrm");
 
     if (!instance)
     {
@@ -56,8 +23,9 @@ int main(int argc, const char **argv)
         {11.980590820312502, 51.37863823622007},
     };
 
-    auto route = osrmcs_route(instance, coordinates, sizeof(coordinates) / sizeof(coordinates[0]));
-    osrmcs_delete_route(route);
+    auto route = osrmcs_optimize(
+        instance, coordinates, sizeof(coordinates) / sizeof(coordinates[0]), true, false, false);
+    osrmcs_delete(route);
     osrmcs_delete_instance(instance);
 
     return 0;
