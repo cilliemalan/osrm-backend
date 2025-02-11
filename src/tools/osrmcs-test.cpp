@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct Coordinate
 {
@@ -40,6 +42,12 @@ IMPORT void osrmcs_delete_route(const Route *route);
 int main(int argc, const char **argv)
 {
     auto instance = osrmcs_create_instance("C:\\osm\\africa\\africa-latest.osrm");
+
+    if (!instance)
+    {
+        fprintf(stderr, "The instance could not be created.\n");
+        return 1;
+    }
 
     Coordinate coordinates[] = {
         {11.348876953125002, 52.62972886718355},
