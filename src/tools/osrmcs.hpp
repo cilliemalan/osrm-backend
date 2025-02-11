@@ -33,4 +33,5 @@ EXPORT const char *osrmcs_optimize(instance_t instance,
                                    bool overview);
 EXPORT const char *
 osrmcs_table(instance_t instance, Coordinate *coordinates, uint32_t num_coordinates);
+EXPORT const char *osrmcs_optimize_advanced(instance_t instance, const char *request);
 EXPORT void osrmcs_delete(const char *wut);

@@ -16,6 +16,20 @@
 #include "osrm/trip_parameters.hpp"
 #include "util/json_renderer.hpp"
 
+#include "routing/osrm_routed_wrapper.h"
+#include "structures/vroom/input/input.h"
+#include "structures/vroom/job.h"
+#include "structures/vroom/vehicle.h"
+#include "utils/exception.h"
+#include "utils/helpers.h"
+#include "utils/input_parser.h"
+#include "utils/output_json.h"
+#include "utils/version.h"
+
+#include "../include/rapidjson/include/rapidjson/document.h"
+#include "../include/rapidjson/include/rapidjson/stringbuffer.h"
+#include "../include/rapidjson/include/rapidjson/writer.h"
+
 EXPORT instance_t osrmcs_create_instance(const char *database)
 {
     try
@@ -154,6 +168,43 @@ osrmcs_table(instance_t instance, Coordinate *coordinates, uint32_t num_coordina
         return _strdup(responsedata.c_str());
     }
     catch (std::exception &ex)
+    {
+        return _strdup(ex.what());
+    }
+    catch (...)
+    {
+        return _strdup("An unknown error occurred");
+    }
+}
+
+EXPORT const char *osrmcs_optimize_advanced(instance_t instance, const char *request)
+{
+    if (!request || !instance)
+    {
+        return nullptr;
+    }
+
+    try
+    {
+
+        vroom::io::Servers servers;
+        vroom::Server osrm{reinterpret_cast<void *>(instance)};
+        servers[vroom::DEFAULT_PROFILE] = osrm;
+        vroom::Input problem{servers, vroom::ROUTER::LIBOSRM, true};
+        vroom::io::parse(problem, request, false);
+
+        const vroom::Solution sol = problem.solve(vroom::DEFAULT_EXPLORATION_LEVEL,
+                                                  vroom::DEFAULT_EXPLORATION_LEVEL,
+                                                  vroom::DEFAULT_THREADS_NUMBER);
+
+        auto json = vroom::io::to_json(sol, problem.report_distances());
+
+        rapidjson::StringBuffer s;
+        rapidjson::Writer<rapidjson::StringBuffer> r_writer(s);
+        json.Accept(r_writer);
+        return _strdup(s.GetString());
+    }
+    catch (std::exception& ex)
     {
         return _strdup(ex.what());
     }
