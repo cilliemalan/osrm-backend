@@ -147,7 +147,7 @@ int main(int argc, const char **argv)
         {11.980590820312502, 51.37863823622007},
     };
 
-    osrmcs_optimize_advanced(instance, vroomreq);
+    osrmcs_optimize_advanced(instance, vroomreq, 0, 0, 0, 0);
 
     //auto route = osrmcs_optimize(instance, coordinates, sizeof(coordinates) / sizeof(coordinates[0]), true, false, false);
     //osrmcs_delete(route);

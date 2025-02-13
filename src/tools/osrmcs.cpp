@@ -177,25 +177,56 @@ osrmcs_table(instance_t instance, Coordinate *coordinates, uint32_t num_coordina
     }
 }
 
-EXPORT const char *osrmcs_optimize_advanced(instance_t instance, const char *request)
+EXPORT const char *osrmcs_optimize_advanced(instance_t instance,
+                                            const char *request,
+                                            unsigned int searches,
+                                            unsigned int exploration_level,
+                                            unsigned int threads,
+                                            unsigned int timeout)
 {
     if (!request || !instance)
     {
         return nullptr;
     }
 
+    vroom::Timeout mtimeout;
+    if (timeout == 0)
+    {
+        mtimeout = std::chrono::milliseconds(30000);
+    }
+    if (timeout != std::numeric_limits<unsigned int>::max() &&
+        timeout != std::numeric_limits<int>::max())
+    {
+        mtimeout = std::chrono::milliseconds(timeout);
+    }
+
+    if (searches == 0)
+    {
+        searches = vroom::DEFAULT_EXPLORATION_LEVEL;
+    }
+
+    if (exploration_level == 0)
+    {
+        exploration_level = vroom::DEFAULT_EXPLORATION_LEVEL;
+    }
+
+    if (threads == 0)
+    {
+        threads = vroom::DEFAULT_THREADS_NUMBER;
+    }
+
     try
     {
-
         vroom::io::Servers servers;
         vroom::Server osrm{reinterpret_cast<void *>(instance)};
         servers[vroom::DEFAULT_PROFILE] = osrm;
         vroom::Input problem{servers, vroom::ROUTER::LIBOSRM, true};
         vroom::io::parse(problem, request, false);
 
-        const vroom::Solution sol = problem.solve(vroom::DEFAULT_EXPLORATION_LEVEL,
-                                                  vroom::DEFAULT_EXPLORATION_LEVEL,
-                                                  vroom::DEFAULT_THREADS_NUMBER);
+        std::vector<vroom::HeuristicParameters> hparam;
+
+        const vroom::Solution sol = problem.solve(
+            searches, exploration_level, threads, std::chrono::milliseconds{timeout}, hparam);
 
         auto json = vroom::io::to_json(sol, problem.report_distances());
 
@@ -204,7 +235,7 @@ EXPORT const char *osrmcs_optimize_advanced(instance_t instance, const char *req
         json.Accept(r_writer);
         return _strdup(s.GetString());
     }
-    catch (std::exception& ex)
+    catch (std::exception &ex)
     {
         return _strdup(ex.what());
     }
