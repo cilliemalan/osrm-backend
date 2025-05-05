@@ -43,7 +43,7 @@ EXPORT instance_t osrmcs_create_instance(const char *database)
         const auto instance = new osrm::OSRM{config};
         return instance;
     }
-    catch (std::exception &ex)
+    catch (std::exception)
     {
         return nullptr;
     }
@@ -77,7 +77,7 @@ EXPORT const char *osrmcs_route(instance_t instance,
                                           osrm::util::FloatLatitude{coordinates[i].latitude}});
         }
         osrm::engine::api::ResultT result = osrm::json::Object();
-        const auto status = instance->Route(params, result);
+        instance->Route(params, result);
         auto &json_result = std::get<osrm::json::Object>(result);
         std::string responsedata;
         osrm::util::json::render(responsedata, json_result);
@@ -128,7 +128,7 @@ EXPORT const char *osrmcs_optimize(instance_t instance,
         }
 
         osrm::engine::api::ResultT result = osrm::json::Object();
-        const auto status = instance->Trip(params, result);
+        instance->Trip(params, result);
         auto &json_result = std::get<osrm::json::Object>(result);
         std::string responsedata;
         osrm::util::json::render(responsedata, json_result);
@@ -161,7 +161,7 @@ osrmcs_table(instance_t instance, Coordinate *coordinates, uint32_t num_coordina
         }
 
         osrm::engine::api::ResultT result = osrm::json::Object();
-        const auto status = instance->Table(params, result);
+        instance->Table(params, result);
         auto &json_result = std::get<osrm::json::Object>(result);
         std::string responsedata;
         osrm::util::json::render(responsedata, json_result);
@@ -195,7 +195,7 @@ EXPORT const char *osrmcs_optimize_advanced(instance_t instance,
         mtimeout = std::chrono::milliseconds(30000);
     }
     if (timeout != std::numeric_limits<unsigned int>::max() &&
-        timeout != std::numeric_limits<int>::max())
+        timeout != static_cast<unsigned int>(std::numeric_limits<int>::max()))
     {
         mtimeout = std::chrono::milliseconds(timeout);
     }
@@ -220,7 +220,7 @@ EXPORT const char *osrmcs_optimize_advanced(instance_t instance,
         vroom::io::Servers servers;
         vroom::Server osrm{reinterpret_cast<void *>(instance)};
         servers[vroom::DEFAULT_PROFILE] = osrm;
-        vroom::Input problem{servers, vroom::ROUTER::LIBOSRM, true};
+        vroom::Input problem(servers, vroom::ROUTER::LIBOSRM, true);
         vroom::io::parse(problem, request, false);
 
         std::vector<vroom::HeuristicParameters> hparam;
