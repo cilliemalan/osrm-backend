@@ -1,12 +1,12 @@
 # Open Source Routing Machine
 
-## Eureka Notes
+## Notes on this fork
 This repository contains the changes made to OSRM to make it compatible with our requirements. This
 consists primarilyof two things:
 - [x] Getting OSRM to build on Windows
 - [x] Creating a DLL that contains the OSRM functionality we need which can then be consumed
       via P/Invoke from C#.
-- [ ] TSP-TW
+- [x] TSP-TW (vroom)
 - [ ] CI Build
 
 ### Building
